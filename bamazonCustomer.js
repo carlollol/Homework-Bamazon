@@ -48,7 +48,7 @@ var askUser = function() {
             purchaseItem();
         })
         } else if (answers.name === "p") {
-            postItem();
+            purchaseItem();
         }
     })
 };
@@ -58,53 +58,40 @@ var askUser = function() {
 var purchaseItem = function() {
     inquirer.prompt([{
         name: "name",
-        message: "Would you like to purchase anything? (y/n)"
-    }]).then(function(answers) {
-        if (answer.name === y){
-        connection.query("SELECT * FROM items WHERE name = ?", [{name:answers.name}], function(err, res) {
-            console.log(res);
-
-            inquirer.prompt([{
-                name: "price",
-                message: "How much would you like to bid?"
-            }]).then(function(answers) {
-                // if (answers.price > ) {
-                console.log("place a bid");
-            })
-        })
-    }
-})
-};
-
-var postItem = function() {
-    inquirer.prompt([{
-            name: "name",
-            message: "What is your item?"
+        message: "Type the ID of the product you wish to purchase"
         },
         {
-            name: "price",
-            message: "How much is it?"
-        },
+            name: "stock",
+            message: "How many would you like to buy?"
+        }
     ]).then(function(answers) {
-        connection.query("INSERT INTO items SET ?", {
-            name: answers.name,
-            price: answers.price
-        }, function(err, res) {
-            console.log("Your item has been added");
-        })
+        var id = answers.name;
+        var amount = answers.stock;  
+        updateStock(id, amount);
     })
 };
 
+var updateStock = function(item, number) {
+    connection.query('SELECT stock_quantity FROM products WHERE item_id = ?', [item], function (err, res) {
+        if(err)
+            throw err;
+        else {
+            if(number < res[0].stock_quantity) {
+                var newStock = (res[0].stock_quantity) - number;
+                connection.query('UPDATE products SET ? WHERE item_id = ?', [{stock_quantity: newStock} ,item], function(){
+                    console.log("Pleasure doing business with ya!");
+                });
+            }
+            else {
+                console.log("Are you mad or just delirious? Come back next time...");
+                purchaseItem();
+            }   
+        }
+    })
+};
+
+
 askUser();
-
-// var newItem = new bidItem(answers.name, answers.price);
-
-// dude.printInfo();
-
-// count++;
-
-// askQuestion();
-
 
 // connection.connect(function(err) {
 //   if (err) throw err;
